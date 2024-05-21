@@ -12,5 +12,9 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
 
 //    List<Expense> findByNameContaining(String keyword);
 
-    List<Expense> findByNameContainingAndDateBetween(String keyword, Date start, Date end);
+    List<Expense> findByNameContainingAndDateBetweenAndUserId(String keyword, Date start, Date end, Long id);
+
+    List<Expense> findByUserId(Long Id);
+
+    List<Expense> findByDateBetweenAndUserId(Date start, Date end, Long id);
 }

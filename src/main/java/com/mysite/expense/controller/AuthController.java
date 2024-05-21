@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import java.security.Principal;
+
 @Controller
 @RequiredArgsConstructor
 public class AuthController {
@@ -19,8 +21,11 @@ public class AuthController {
     private final UserService uService;
 
     @GetMapping({"/login", "/"})
-    public String showLoginPage() {
-        return "login";
+    public String showLoginPage(Principal principal) {
+        if(principal == null) {     // principal 객체는 시큐리티 인증시 유저의 정보를 담아 유지하는 객체
+            return "login";         // principal 객체가 null이란 것은 인증이 안된 상태를 의미
+        }
+        return "redirect:/expenses";
     }
 
     @GetMapping("/register")
@@ -37,6 +42,6 @@ public class AuthController {
         }
         uService.save(user);
         model.addAttribute("successMsg", true);
-        return "login";
+        return "response";
     }
 }

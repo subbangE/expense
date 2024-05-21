@@ -15,6 +15,7 @@ import java.util.ArrayList;
 public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepo;
 
+    // 시큐리티가 로그인 하기위한 메서드 완성시켜야함
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepo.findByEmail(email).orElseThrow(() ->

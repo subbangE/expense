@@ -3,14 +3,18 @@ package com.mysite.expense.service;
 import com.mysite.expense.dto.ExpenseDTO;
 import com.mysite.expense.dto.ExpenseFilterDTO;
 import com.mysite.expense.entity.Expense;
+import com.mysite.expense.entity.User;
+import com.mysite.expense.exception.ExpenseNotFoundException;
 import com.mysite.expense.repository.ExpenseRepository;
 import com.mysite.expense.util.DateTimeUtil;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.Date;
 import java.text.ParseException;
+import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -20,8 +24,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ExpenseService {
 
+    @Autowired
     private final ExpenseRepository expRepo;
+
     private final ModelMapper modelMapper;
+
+    private final UserService uService;
 
     //모든 비용 리스트를 찾는 서비스
     public List<Expense> findAllExpenses() {
@@ -38,7 +46,7 @@ public class ExpenseService {
     // DTO => Entity 변환
     private Expense mapToEntity(ExpenseDTO expenseDTO) throws ParseException {
         Expense expense = modelMapper.map(expenseDTO, Expense.class);
-        if (expenseDTO.getDateString() == null) {
+        if (expenseDTO.getId() == null) {
             // expenseId 유니크 문자열 입력 (자바 유틸 UUID 사용)
             expense.setExpenseId(UUID.randomUUID().toString());
         }
@@ -49,7 +57,11 @@ public class ExpenseService {
 
     //모든 비용 DTO 리스트를 리턴
     public List<ExpenseDTO> getAllExpenses() {
-        List<Expense> list = expRepo.findAll(); //엔티티 리스트
+        User user = uService.getLoggedInUser();
+        List<Expense> list = expRepo.findByDateBetweenAndUserId(
+                Date.valueOf(LocalDate.now().withDayOfMonth(1)),
+                Date.valueOf(LocalDate.now()),
+                user.getId()); //엔티티 리스트
         List<ExpenseDTO> listDTO = list.stream()
                 .map((expense) -> mapToDTO(expense))
                 .collect(Collectors.toList());
@@ -58,6 +70,7 @@ public class ExpenseService {
 
     public ExpenseDTO saveExpenseDetails(ExpenseDTO expenseDTO) throws ParseException {
         Expense expense = mapToEntity(expenseDTO);
+        expense.setUser(uService.getLoggedInUser());
         expense = expRepo.save(expense);
         return mapToDTO(expense);
     }
@@ -68,7 +81,7 @@ public class ExpenseService {
     }
 
     private Expense getExpense(String id) {
-        return expRepo.findByExpenseId(id).orElseThrow(() -> new RuntimeException("해당 ID의 아이템을 찾을 수 없습니다"));
+        return expRepo.findByExpenseId(id).orElseThrow(() -> new ExpenseNotFoundException("해당 ID의 아이템을 찾을 수 없습니다 : " + uService.getLoggedInUser().getId()));
     }
 
     public ExpenseDTO getExpenseById(String id) {
@@ -88,7 +101,7 @@ public class ExpenseService {
         Date startDay = !startDate.isEmpty() ? DateTimeUtil.convertStringToDate(startDate) : new Date(0);
         Date endDay = !endDate.isEmpty() ? DateTimeUtil.convertStringToDate(endDate) : new Date(System.currentTimeMillis());
 
-        List<Expense> list = expRepo.findByNameContainingAndDateBetween(keyword, startDay, endDay);
+        List<Expense> list = expRepo.findByNameContainingAndDateBetweenAndUserId(keyword, startDay, endDay, uService.getLoggedInUser().getId());
         List<ExpenseDTO> filterlist = list.stream().map(this::mapToDTO).collect(Collectors.toList());
 
         // date 또는 amount로 검색할 때 내림차순으로 정렬

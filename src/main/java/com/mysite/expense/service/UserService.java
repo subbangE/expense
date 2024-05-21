@@ -5,6 +5,9 @@ import com.mysite.expense.entity.User;
 import com.mysite.expense.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +29,13 @@ public class UserService {
 
     private User mapToEntity(UserDTO userDTO) {
         return modelMapper.map(userDTO, User.class);
+    }
+
+    public User getLoggedInUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String loginUserEmail = auth.getName();
+        return userRepo.findByEmail(loginUserEmail).orElseThrow(() ->
+                new UsernameNotFoundException("이메일을 찾을 수 없습니다."));
     }
 
 }

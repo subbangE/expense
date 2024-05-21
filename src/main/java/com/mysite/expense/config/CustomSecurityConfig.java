@@ -1,6 +1,7 @@
 package com.mysite.expense.config;
 
 import com.mysite.expense.service.CustomUserDetailsService;
+import lombok.RequiredArgsConstructor;
 import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,7 +16,12 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration  // Bean 등록할때 쓰는 어노테이션
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class CustomSecurityConfig {
+
+    @SuppressWarnings("unused")
+    private final CustomUserDetailsService customUserDetailsService;
+
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -35,6 +41,14 @@ public class CustomSecurityConfig {
                                 .usernameParameter("email")
                                 .passwordParameter("password")
                         // 인증시 로그인 페이지를 지정하고 실패시 주소 지정, 성공주소 지정 (username => email, password)
+                )
+                .logout((logout) ->
+                        logout
+                                .logoutUrl("/logout")
+                                .invalidateHttpSession(true)
+                                .clearAuthentication(true)
+                                .logoutSuccessUrl("/login?logout=true")
+                                .permitAll()
                 );
 
         return http.build();
@@ -47,18 +61,16 @@ public class CustomSecurityConfig {
                 web.ignoring().requestMatchers("/css/**", "/js/**", "/error");
     }
 
+    // 시큐리티 인증 담당 객체
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
+
     // 암호화 객체
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
-//    @SuppressWarnings("unused")
-//    private final CustomUserDetailsService customUserDetailsService;
-//
-//    @Bean
-//    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-//        return authenticationConfiguration.getAuthenticationManager();
-//    }
 
 }
