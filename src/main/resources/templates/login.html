@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>로그인 페이지</title>
+</head>
+<body>
+<h1>로그인</h1>
+<hr />
+<div th:if="${successMsg}">
+    <h2>가입 성공!</h2>
+    <p>가입해주셔서 감사합니다. 이제 당신의 비용 관리를 시작하세요😊</p>
+</div>
+<div>
+    <form id="loginForm" action="">
+        <input type="text" name="email" placeholder="이메일 입력"/>
+        <br/><br/>
+        <input type="text" name="password" placeholder="패스워드 입력"/>
+        <br/><br/>
+        <button type="submit">로그인</button>
+    </form>
+</div>
+</body>
+
+<!-- 자바스크립트 링크 -->
+<script th:src="@{/js/jquery.js}"></script>
+<script th:src="@{/js/jquery.validation.js}"></script>
+<script th:src="@{/js/login.js}"></script>
+
+</html>
